@@ -11,8 +11,17 @@ Test #{@email_uuid}
 EOF
 end
 
-When /I send it to (.*)/ do |server|
+When /I send it to ([^ ]*)$/ do |server|
 	Net::SMTP.start(server) do |smtp|
+		smtp.send_message(@email_body, @email_from, @email_to)
+	end
+end
+
+When /I send it to ([^ ]*) authenticated with ([^ ]*) ([^ ]*):([^ ]*) over TLS connection/ do |server, auth, login, password|
+	smtp = Net::SMTP.new(server)
+	smtp.enable_starttls
+
+	smtp.start('localhost', login, password, auth) do |smtp|
 		smtp.send_message(@email_body, @email_from, @email_to)
 	end
 end
