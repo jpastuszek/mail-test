@@ -13,3 +13,13 @@ require 'mail-test'
 require 'test/unit/assertions'
 
 World(Test::Unit::Assertions)
+
+require 'net/smtp'
+require 'net/imap'
+require 'timeout'
+require 'uuid'
+
+def uuid
+	UUID.new.generate
+end
+
