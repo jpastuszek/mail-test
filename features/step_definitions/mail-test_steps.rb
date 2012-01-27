@@ -12,18 +12,36 @@ EOF
 end
 
 When /I send it to ([^ ]*)$/ do |server|
-	Net::SMTP.start(server) do |smtp|
-		smtp.send_message(@email_body, @email_from, @email_to)
+	begin
+		Net::SMTP.start(server) do |smtp|
+			smtp.send_message(@email_body, @email_from, @email_to)
+		end
+		@smtp_error = nil
+	rescue Net::ProtoFatalError => e
+		@smtp_error = e
 	end
 end
 
 When /I send it to ([^ ]*) authenticated with ([^ ]*) ([^ ]*):([^ ]*) over TLS connection/ do |server, auth, login, password|
-	smtp = Net::SMTP.new(server)
-	smtp.enable_starttls
+	begin
+		smtp = Net::SMTP.new(server)
+		smtp.enable_starttls
 
-	smtp.start('localhost', login, password, auth) do |smtp|
-		smtp.send_message(@email_body, @email_from, @email_to)
+		smtp.start('localhost', login, password, auth) do |smtp|
+			smtp.send_message(@email_body, @email_from, @email_to)
+		end
+		@smtp_error = nil
+	rescue Net::ProtoFatalError => e
+		@smtp_error = e
 	end
+end
+
+Then /I should get no SMTP error/ do
+	@smtp_error.should be_nil
+end
+
+Then /I should get SMTP error: (.*)/ do |msg|
+	@smtp_error.message.should include(msg)
 end
 
 Then /I should find it in ([^ ]*) IMAP (.*) authenticated with ([^ ]*) ([^ ]*):([^ ]*) over TLS connection within (\d+) seconds/ do |server, mailbox, auth, login, password, timeout|
